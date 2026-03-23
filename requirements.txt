@@ -1,6 +1,6 @@
 Flask==3.0.3
-pandas==2.2.3
 qrcode==7.4.2
 pillow==10.4.0
 Werkzeug==3.0.4
 waitress>=3.0.0
+supabase>=2.0.0
