@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Agent</span></a>
+            <div class="nav-user">
+                <span>Agent: <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
+        
+        <!-- Left Column: Create Ticket -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash-messages">
+                {% for message in messages %}
+                  <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <h3 class="card-header" style="font-size:1.25rem; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:20px;">Issue New Ticket</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="student_name">Student Name</label>
+                        <input type="text" id="student_name" name="student_name" placeholder="E.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="class_name">Grade / Class Name</label>
+                        <input type="text" id="class_name" name="class_name" placeholder="E.g. 10th Grade" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">Generate Ticket</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: My Tickets -->
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:1.25rem;">My Issued Tickets</h2>
+                <span class="badge">Total: {{ tickets|length }}</span>
+            </div>
+            <div class="table-container" style="border:none; border-radius:0;">
+                <table>
+                    <tr>
+                        <th>Student Details</th>
+                        <th>Class</th>
+                        <th>QR Code</th>
+                    </tr>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:500; font-size:1rem;">{{ ticket.student_name }}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); font-family:monospace; margin-top:4px;">ID: {{ ticket.id }}</div>
+                        </td>
+                        <td><span class="badge" style="background-color:#F3F4F6; color:var(--text-main);">{{ ticket.class_name }}</span></td>
+                        <td>
+                            <img src="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" width="72" class="qr-code-img" alt="QR Code" title="Secure Token: {{ ticket.qr_token }}">
+                            <br>
+                            <a href="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline" style="font-size: 0.7rem; padding: 4px 8px; margin-top: 4px; display: inline-block;">Download QR</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align: center; padding: 40px; color:var(--text-muted);">You have not issued any tickets yet.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

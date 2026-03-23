@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Ticket - GIC Thingyan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Admin</span></a>
+            <div class="nav-user">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none;">Manage Users</a>
+                <span>Welcome, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 500px; margin-top: 40px;">
+        <div class="card">
+            <h2 class="card-header">Edit Ticket Details</h2>
+            <div style="margin-bottom:24px; font-size:0.9rem; color:var(--text-secondary); font-family:monospace; background:#F9FAFB; padding:12px; border-radius:6px; border:1px solid var(--border);">
+                Ticket ID: {{ ticket.id }}
+            </div>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="student_name">Student Name</label>
+                    <input type="text" id="student_name" name="student_name" value="{{ ticket.student_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="class_name">Grade / Class Name</label>
+                    <input type="text" id="class_name" name="class_name" value="{{ ticket.class_name }}" required>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:32px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="flex:1; text-align:center;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

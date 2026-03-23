@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Admin</span></a>
+            <div class="nav-user">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none; font-weight:bold;">Manage Users</a>
+                <span>Welcome, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
+        
+        <!-- Left Column: Create User -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash-messages">
+                {% for message in messages %}
+                  <div class="flash-message" style="background-color:#E0F2FE; color:#0369A1;">{{ message }}</div>
+                {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <h3 class="card-header" style="font-size:1.25rem; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:20px;">Create New User</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="E.g. agent3" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; outline: none;">
+                            <option value="agent">Agent</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">Create User</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: User List -->
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:1.25rem;">All Directory Users</h2>
+                <span class="badge">Total: {{ users|length }}</span>
+            </div>
+            <div class="table-container" style="border:none; border-radius:0;">
+                <table>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Access Token ID</th>
+                    </tr>
+                    {% for u in users %}
+                    <tr>
+                        <td style="font-weight:600;">{{ u.username }}</td>
+                        <td>
+                            <span class="badge" style="background-color:{% if u.role == 'admin' %}#FEF3C7; color:#D97706;{% else %}#F3F4F6; color:var(--text-main);{% endif %}">
+                                {{ u.role | title }}
+                            </span>
+                        </td>
+                        <td style="font-family:monospace; color:var(--text-muted); letter-spacing: 1px;">{{ u.token }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
