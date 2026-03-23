@@ -28,7 +28,8 @@ def init_db():
         df_users = pd.DataFrame({
             'username': ['admin1', 'admin2', 'admin3', 'agent1', 'agent2'],
             'token': [generate_unique_token() for _ in range(5)],
-            'role': ['admin', 'admin', 'admin', 'agent', 'agent']
+            'role': ['admin', 'admin', 'admin', 'agent', 'agent'],
+            'paid_amount': [0, 0, 0, 0, 0]
         })
         df_users.to_csv(USERS_CSV, index=False)
     
@@ -110,7 +111,14 @@ def agent_dashboard():
     df_tickets = pd.read_csv(TICKETS_CSV)
     my_tickets = df_tickets[df_tickets['agent_username'] == username]
     
-    return render_template('agent_dashboard.html', tickets=my_tickets.to_dict('records'))
+    df_users = pd.read_csv(USERS_CSV)
+    user_row = df_users[df_users['username'] == username]
+    paid_amount = user_row.iloc[0].get('paid_amount', 0) if not user_row.empty else 0
+    tickets_sold = len(my_tickets)
+    total_value = tickets_sold * 25000
+    amount_to_pay = total_value - paid_amount
+    
+    return render_template('agent_dashboard.html', tickets=my_tickets.to_dict('records'), amount_to_pay=amount_to_pay, tickets_sold=tickets_sold)
 
 @app.route('/admin/delete/<ticket_id>')
 def delete_ticket(ticket_id):
@@ -160,6 +168,7 @@ def manage_users():
         return redirect(url_for('login'))
         
     df_users = pd.read_csv(USERS_CSV)
+    df_tickets = pd.read_csv(TICKETS_CSV)
     
     if request.method == 'POST':
         username = request.form['username'].strip()
@@ -174,7 +183,8 @@ def manage_users():
         new_user = pd.DataFrame([{
             'username': username,
             'token': new_token,
-            'role': role
+            'role': role,
+            'paid_amount': 0
         }])
         
         df_users = pd.concat([df_users, new_user], ignore_index=True)
@@ -182,7 +192,47 @@ def manage_users():
         flash(f'User "{username}" created successfully! Token: {new_token}')
         return redirect(url_for('manage_users'))
         
-    return render_template('admin_users.html', users=df_users.to_dict('records'))
+    users_data = []
+    for _, user in df_users.iterrows():
+        u_dict = user.to_dict()
+        if u_dict['role'] == 'agent':
+            t_sold = len(df_tickets[df_tickets['agent_username'] == u_dict['username']])
+            u_dict['tickets_sold'] = t_sold
+            u_dict['total_value'] = t_sold * 25000
+            u_dict['paid_amount'] = u_dict.get('paid_amount', 0)
+            u_dict['amount_to_pay'] = u_dict['total_value'] - u_dict['paid_amount']
+        users_data.append(u_dict)
+        
+    return render_template('admin_users.html', users=users_data)
+
+@app.route('/admin/payment/<username>', methods=['POST'])
+def update_payment(username):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    df_users = pd.read_csv(USERS_CSV)
+    if username not in df_users['username'].values:
+        flash('User not found')
+        return redirect(url_for('manage_users'))
+        
+    action = request.form.get('action')
+    
+    if action == 'clear':
+        df_tickets = pd.read_csv(TICKETS_CSV)
+        t_sold = len(df_tickets[df_tickets['agent_username'] == username])
+        df_users.loc[df_users['username'] == username, 'paid_amount'] = t_sold * 25000
+        flash(f'Payment cleared for {username}')
+        
+    elif action == 'edit':
+        try:
+            new_paid = int(request.form.get('paid_amount', 0))
+            df_users.loc[df_users['username'] == username, 'paid_amount'] = new_paid
+            flash(f'Payment updated for {username}')
+        except ValueError:
+            flash('Invalid amount entered')
+            
+    df_users.to_csv(USERS_CSV, index=False)
+    return redirect(url_for('manage_users'))
 
 if __name__ == '__main__':
     from waitress import serve

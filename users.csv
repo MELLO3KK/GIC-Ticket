@@ -1,6 +1,6 @@
-username,token,role
-admin1,697384809326,admin
-admin2,754525154313,admin
-admin3,956930140989,admin
-agent1,157903786075,agent
-agent2,428553893020,agent
+username,token,role,paid_amount
+admin1,697384809326,admin,0
+admin2,754525154313,admin,0
+admin3,956930140989,admin,0
+agent1,157903786075,agent,5000
+agent2,428553893020,agent,0

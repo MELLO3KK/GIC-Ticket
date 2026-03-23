@@ -47,7 +47,15 @@
             </div>
         </div>
 
-        <!-- Right Column: My Tickets -->
+        <!-- Right Column: My Tickets & Financials -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+            <div class="card">
+                <h3 class="card-header" style="font-size:1.25rem; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:16px;">Financial Status</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 1.1rem;">Tickets Sold: <strong>{{ tickets_sold }}</strong></span>
+                    <span style="font-size: 1.1rem;">Amount Owed: <strong style="color: {% if amount_to_pay > 0 %}#dc2626{% else %}#16a34a{% endif %}; font-size: 1.25rem;">{{ amount_to_pay }} MMK</strong></span>
+                </div>
+            </div>
         <div class="card" style="padding:0; overflow:hidden;">
             <div style="padding: 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <h2 style="margin:0; font-size:1.25rem;">My Issued Tickets</h2>
@@ -66,7 +74,7 @@
                             <div style="font-weight:500; font-size:1rem;">{{ ticket.student_name }}</div>
                             <div style="font-size:0.8rem; color:var(--text-muted); font-family:monospace; margin-top:4px;">ID: {{ ticket.id }}</div>
                         </td>
-                        <td><span class="badge" style="background-color:#F3F4F6; color:var(--text-main);">{{ ticket.class_name }}</span></td>
+                        <td><span class="badge">{{ ticket.class_name }}</span></td>
                         <td>
                             <img src="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" width="72" class="qr-code-img" alt="QR Code" title="Secure Token: {{ ticket.qr_token }}">
                             <br>
