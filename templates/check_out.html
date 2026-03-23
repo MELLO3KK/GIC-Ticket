@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-out Scanner — GIC Thingyan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        .scanner-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .scanner-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── Scanner Card ── */
+        .scanner-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 32px rgba(31,38,135,0.07);
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .scanner-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .scanner-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #f87171, #dc2626);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+        .scanner-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+        .scanner-subtitle { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+
+        #reader-container { padding: 20px; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; min-height: 200px; }
+        #reader video { border-radius: 12px; }
+
+        .camera-error {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--danger);
+            font-size: 0.95rem;
+            display: none;
+        }
+        .camera-error .icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+        /* Status pill */
+        .status-pill {
+            margin: 0 20px 20px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .status-pill.visible { opacity: 1; transform: translateY(0); }
+        .status-pill.success { background: rgba(239,68,68,0.10); color: #7f1d1d; border: 1px solid rgba(239,68,68,0.25); }
+        .status-pill.error   { background: rgba(239,68,68,0.08); color: #991b1b; border: 1px solid rgba(239,68,68,0.2); }
+        .status-pill.warn    { background: rgba(245,158,11,0.12); color: #92400e; border: 1px solid rgba(245,158,11,0.3); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .status-pill.success .status-dot { background: #ef4444; }
+        .status-pill.error   .status-dot { background: #ef4444; animation: pulse-red 1s infinite; }
+        .status-pill.warn    .status-dot { background: #f59e0b; }
+        @keyframes pulse-red {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Result card */
+        .result-card {
+            margin: 0 20px 20px;
+            padding: 16px;
+            border-radius: 14px;
+            display: none;
+            animation: flyUp 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes flyUp {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .result-card.success { background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.05)); border: 1px solid rgba(239,68,68,0.3); }
+        .result-card.error   { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
+        .result-card.warn    { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+        .result-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .result-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+        .result-meta span { background: rgba(255,255,255,0.6); border-radius: 999px; padding: 2px 10px; border: 1px solid rgba(255,255,255,0.8); }
+
+        /* ── History Card ── */
+        .history-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 32px rgba(31,38,135,0.07);
+            overflow: hidden;
+            animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1);
+        }
+        .history-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .history-label { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .history-count {
+            background: linear-gradient(135deg, #f87171, #dc2626);
+            color: white; font-size: 0.72rem; font-weight: 700;
+            padding: 3px 10px; border-radius: 999px;
+        }
+        .history-list { list-style: none; margin: 0; padding: 0; max-height: 480px; overflow-y: auto; }
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-track { background: transparent; }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+
+        .history-item {
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: slideInRight 0.4s ease forwards;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #f87171, #dc2626);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; color: white;
+            flex-shrink: 0;
+        }
+        .history-avatar.error-av { background: linear-gradient(135deg, #94a3b8, #475569); }
+        .history-avatar.warn-av  { background: linear-gradient(135deg, #fbbf24, #d97706); }
+        .history-info { flex: 1; min-width: 0; }
+        .history-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-sub  { font-size: 0.75rem; color: var(--text-muted); }
+        .history-time { font-size: 0.72rem; color: var(--text-muted); font-family: monospace; white-space: nowrap; }
+
+        .history-empty {
+            padding: 50px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .history-empty .empty-icon { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.4; }
+
+        /* Scanning ring */
+        .scan-ring {
+            width: 60px; height: 60px;
+            border: 3px solid rgba(239,68,68,0.2);
+            border-top-color: #ef4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 4px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .scanning-state {
+            padding: 20px;
+            text-align: center;
+            display: none;
+        }
+        .scanning-state.active { display: block; }
+        .scanning-label { font-size: 0.85rem; color: #dc2626; font-weight: 600; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Admin</span></a>
+            <div class="nav-user">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
+                <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
+                <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none; font-weight:700; color:#dc2626;">✕ Check-out</a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none;">Users</a>
+                <span>Welcome, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="scanner-layout">
+
+            <!-- ── Left: Scanner ── -->
+            <div class="scanner-card">
+                <div class="scanner-header">
+                    <div class="scanner-icon">✕</div>
+                    <div>
+                        <p class="scanner-title">Check-out Scanner</p>
+                        <p class="scanner-subtitle">Point camera at student's QR code</p>
+                    </div>
+                </div>
+
+                <div id="reader-container">
+                    <div id="reader"></div>
+                    <div id="camera-error" class="camera-error">
+                        <div class="icon">📷</div>
+                        <strong>Camera unavailable</strong><br>
+                        Please allow camera permissions and ensure you're on HTTPS.
+                    </div>
+                </div>
+
+                <!-- Scanning indicator -->
+                <div id="scanning-state" class="scanning-state">
+                    <div class="scan-ring"></div>
+                    <div class="scanning-label">Scanning…</div>
+                </div>
+
+                <!-- Status pill -->
+                <div id="status-pill" class="status-pill">
+                    <div class="status-dot"></div>
+                    <span id="status-text"></span>
+                </div>
+
+                <!-- Rich result card -->
+                <div id="result-card" class="result-card">
+                    <div id="result-name" class="result-name"></div>
+                    <div id="result-meta" class="result-meta"></div>
+                </div>
+            </div>
+
+            <!-- ── Right: Scan History ── -->
+            <div class="history-card">
+                <div class="history-header">
+                    <div class="history-label">
+                        📋 Scan History
+                    </div>
+                    <span id="history-count-badge" class="history-count">0</span>
+                </div>
+                <div id="history-empty" class="history-empty">
+                    <div class="empty-icon">📷</div>
+                    Scans will appear here as you check people out.
+                </div>
+                <ul id="history-list" class="history-list"></ul>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const html5QrCode = new Html5Qrcode("reader");
+        let isProcessing = false;
+        let scanCount = 0;
+
+        // ── UI helpers ──────────────────────────────────────────────────────────
+        function showPill(msg, type) {
+            const pill = document.getElementById("status-pill");
+            const txt  = document.getElementById("status-text");
+            pill.className = "status-pill " + type + " visible";
+            txt.textContent = msg;
+            clearTimeout(pill._timer);
+            pill._timer = setTimeout(() => {
+                pill.classList.remove("visible");
+            }, 4000);
+        }
+
+        function showResultCard(name, metaItems, type) {
+            const card = document.getElementById("result-card");
+            const nEl  = document.getElementById("result-name");
+            const mEl  = document.getElementById("result-meta");
+            card.style.display = "block";
+            card.className = "result-card " + type;
+            nEl.textContent = name;
+            mEl.innerHTML = metaItems.map(m => `<span>${m}</span>`).join("");
+            clearTimeout(card._timer);
+            card._timer = setTimeout(() => { card.style.display = "none"; }, 5000);
+        }
+
+        function addHistory(name, sub, type) {
+            const empty = document.getElementById("history-empty");
+            const list  = document.getElementById("history-list");
+            const badge = document.getElementById("history-count-badge");
+
+            if (empty) empty.style.display = "none";
+
+            const avatarClass = type === "success" ? "history-avatar"
+                              : type === "error"   ? "history-avatar error-av"
+                              :                      "history-avatar warn-av";
+
+            const initials = name.trim().split(" ")
+                .filter(Boolean).slice(0,2)
+                .map(w => w[0].toUpperCase()).join("");
+
+            const now = new Date();
+            const time = now.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+
+            const li = document.createElement("li");
+            li.className = "history-item";
+            li.innerHTML = `
+                <div class="${avatarClass}">${initials || "?"}</div>
+                <div class="history-info">
+                    <div class="history-name">${name}</div>
+                    <div class="history-sub">${sub}</div>
+                </div>
+                <div class="history-time">${time}</div>
+            `;
+            list.prepend(li);
+            scanCount++;
+            badge.textContent = scanCount;
+        }
+
+        // ── QR Scan Callback ────────────────────────────────────────────────────
+        const onScanSuccess = (decodedText) => {
+            if (isProcessing) return;
+            isProcessing = true;
+            document.getElementById("scanning-state").classList.remove("active");
+
+            fetch("{{ url_for('admin_check_out') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ qr_token: decodedText })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const meta = [];
+                    if (data.class_name) meta.push("🎓 " + data.class_name);
+                    meta.push("🚪 Checked Out");
+
+                    showPill("✕ " + (data.student_name || "Student") + " checked out", "success");
+                    showResultCard(data.student_name || "Student", meta, "success");
+                    addHistory(data.student_name || "Student", data.class_name || "Check-out", "success");
+
+                } else {
+                    showPill("✗ " + (data.message || "Scan failed"), "error");
+                    showResultCard("Scan Failed", [data.message || "Unknown error"], "error");
+                    addHistory("Invalid QR", data.message || "Not found", "error");
+                }
+
+                // Re-enable after 2.5s for multi-scan
+                setTimeout(() => {
+                    isProcessing = false;
+                    document.getElementById("scanning-state").classList.add("active");
+                }, 2500);
+            })
+            .catch(() => {
+                showPill("✗ Network error. Check connection.", "error");
+                addHistory("Network Error", "Could not reach server", "error");
+                isProcessing = false;
+                document.getElementById("scanning-state").classList.add("active");
+            });
+        };
+
+        // ── Start camera ────────────────────────────────────────────────────────
+        const config = {
+            fps: 10,
+            qrbox: { width: 240, height: 240 },
+            aspectRatio: 1.0,
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            onScanSuccess,
+            (errorMessage) => {
+                // Ignore background scan errors (e.g. no qr code found in frame)
+            }
+        )
+            .then(() => {
+                document.getElementById("scanning-state").classList.add("active");
+            })
+            .catch(() => {
+                document.getElementById("reader").style.display = "none";
+                document.getElementById("camera-error").style.display = "block";
+            });
+    });
+    </script>
+</body>
+</html>

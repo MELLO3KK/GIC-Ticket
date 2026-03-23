@@ -12,6 +12,8 @@
             <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Admin</span></a>
             <div class="nav-user">
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
+                <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
+                <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none;">Check-out</a>
                 <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none;">Manage Users</a>
                 <span>Welcome, <strong>{{ session['username'] }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>

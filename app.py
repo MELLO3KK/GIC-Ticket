@@ -204,6 +204,82 @@ def update_payment(username):
     return redirect(url_for('manage_users'))
 
 
+@app.route('/admin/check-in', methods=['GET', 'POST'])
+def admin_check_in():
+    if session.get('role') != 'admin':
+        if request.method == 'POST':
+            return {"success": False, "message": "Unauthorized"}, 403
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        qr_token = data.get('qr_token')
+
+        if not qr_token:
+            return {"success": False, "message": "No QR token provided"}, 400
+
+        ticket = db.get_ticket_by_qr(qr_token)
+        if not ticket:
+            return {"success": False, "message": "Invalid QR code — ticket not found"}, 404
+
+        # Duplicate check-in prevention
+        last = db.get_last_attendance(ticket['id'])
+        if last and last['event_type'] == 'Check-in':
+            return {
+                "success": False,
+                "message": f"{ticket['student_name']} is already checked in",
+                "student_name": ticket['student_name'],
+                "class_name": ticket.get('class_name', ''),
+            }, 409
+
+        try:
+            ts = db.log_attendance(ticket['id'], ticket['student_name'], "Check-in")
+            return {
+                "success": True,
+                "message": f"Check-in successful",
+                "student_name": ticket['student_name'],
+                "class_name": ticket.get('class_name', ''),
+                "timestamp": ts,
+            }
+        except Exception as e:
+            return {"success": False, "message": "Server error: " + str(e)}, 500
+
+    return render_template('check_in.html')
+
+
+@app.route('/admin/check-out', methods=['GET', 'POST'])
+def admin_check_out():
+    if session.get('role') != 'admin':
+        if request.method == 'POST':
+            return {"success": False, "message": "Unauthorized"}, 403
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        qr_token = data.get('qr_token')
+        
+        if not qr_token:
+            return {"success": False, "message": "No QR token provided"}, 400
+            
+        ticket = db.get_ticket_by_qr(qr_token)
+        if not ticket:
+            return {"success": False, "message": "Invalid QR token"}, 404
+            
+        try:
+            ts = db.log_attendance(ticket['id'], ticket['student_name'], "Check-out")
+            return {
+                "success": True,
+                "message": f"Check-out successful",
+                "student_name": ticket['student_name'],
+                "class_name": ticket.get('class_name', ''),
+                "timestamp": ts,
+            }
+        except Exception as e:
+            return {"success": False, "message": "Error logging attendance: " + str(e)}, 500
+
+    return render_template('check_out.html')
+
+
 if __name__ == '__main__':
     from waitress import serve
     print("Starting production server with Waitress on http://0.0.0.0:5000...")

@@ -1,4 +1,5 @@
 import os
+import datetime
 from supabase import create_client, Client
 
 SUPABASE_URL = "https://taiuvdmywepyudlpphnl.supabase.co"
@@ -88,3 +89,34 @@ def count_tickets_by_agent(username: str) -> int:
     """Return the number of tickets sold by an agent."""
     res = supabase.table("tickets").select("id", count="exact").eq("agent_username", username).execute()
     return res.count if res.count is not None else 0
+
+
+def get_ticket_by_qr(qr_token: str):
+    """Return ticket dict or None based on qr_token."""
+    res = supabase.table("tickets").select("*").eq("qr_token", qr_token).execute()
+    return res.data[0] if res.data else None
+
+
+def log_attendance(ticket_id: str, student_name: str, event_type: str):
+    """Log check-in or check-out event."""
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    supabase.table("attendance_log").insert({
+        "ticket_id": ticket_id,
+        "student_name": student_name,
+        "event_type": event_type,
+        "timestamp": timestamp
+    }).execute()
+    return timestamp
+
+
+def get_last_attendance(ticket_id: str):
+    """Return the most recent attendance log entry for a ticket, or None."""
+    res = (
+        supabase.table("attendance_log")
+        .select("*")
+        .eq("ticket_id", ticket_id)
+        .order("timestamp", desc=True)
+        .limit(1)
+        .execute()
+    )
+    return res.data[0] if res.data else None
