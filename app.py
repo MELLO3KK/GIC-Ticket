@@ -4,6 +4,7 @@ import random
 import qrcode
 import io
 import csv
+from PIL import Image
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, Response
 import db
 
@@ -143,10 +144,28 @@ def serve_qr(qr_token):
         return "Invalid QR token", 400
         
     img = qrcode.make(qr_token)
-    img_io = io.BytesIO()
-    img.save(img_io, 'PNG')
-    img_io.seek(0)
-    return send_file(img_io, mimetype='image/png')
+    template_path = os.path.join(BASE_DIR, 'template.jpg')
+    
+    if os.path.exists(template_path):
+        qr_img = img.convert("RGBA")
+        design = Image.open(template_path).convert("RGBA")
+        
+        target_size = (325, 325)
+        target_position = (150, 375)
+        
+        qr_resized = qr_img.resize(target_size, Image.Resampling.LANCZOS)
+        design.paste(qr_resized, target_position, qr_resized)
+        
+        design = design.convert("RGB")
+        img_io = io.BytesIO()
+        design.save(img_io, 'JPEG')
+        img_io.seek(0)
+        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f"ticket_{qr_token}.jpg")
+    else:
+        img_io = io.BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=f"qr_{qr_token}.png")
 
 
 @app.route('/admin/users', methods=['GET', 'POST'])

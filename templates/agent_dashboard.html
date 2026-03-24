@@ -89,7 +89,7 @@
                         </td>
                         <td><span class="badge">{{ ticket.class_name }}</span></td>
                         <td>
-                            <a href="{{ url_for('serve_qr', qr_token=ticket.qr_token) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline" style="font-size: 0.7rem; padding: 4px 8px; margin-top: 4px; display: inline-block;">Download QR</a>
+                            <a href="{{ url_for('serve_qr', qr_token=ticket.qr_token) }}" download="Ticket_{{ ticket.id }}.jpg" class="btn btn-outline" style="font-size: 0.7rem; padding: 4px 8px; margin-top: 4px; display: inline-block;">Download QR</a>
                         </td>
                     </tr>
                     {% else %}
