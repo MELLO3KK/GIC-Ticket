@@ -44,6 +44,20 @@ def update_user_paid_amount(username: str, amount: int):
     }).eq("username", username).execute()
 
 
+def update_user_can_sell(username: str, can_sell: bool):
+    """Set can_sell_tickets for a user."""
+    supabase.table("users").update({
+        "can_sell_tickets": can_sell,
+    }).eq("username", username).execute()
+
+
+def update_all_agents_can_sell(can_sell: bool):
+    """Set can_sell_tickets for all agents."""
+    supabase.table("users").update({
+        "can_sell_tickets": can_sell,
+    }).eq("role", "agent").execute()
+
+
 def get_all_tokens():
     """Return list of all existing token strings."""
     res = supabase.table("users").select("token").execute()

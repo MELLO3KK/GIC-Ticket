@@ -15,6 +15,7 @@
                 <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
                 <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none;">Check-out</a>
                 <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none; font-weight:bold;">Manage Users</a>
+                <a href="{{ url_for('manage_agents') }}" class="btn btn-outline" style="border:none;">Manage Agents</a>
                 <span>Welcome, <strong>{{ session['username'] }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
             </div>
@@ -66,9 +67,6 @@
                         <th>Username</th>
                         <th>Role</th>
                         <th>Access Token ID</th>
-                        <th>Tickets Sold</th>
-                        <th>Amount to Pay</th>
-                        <th>Actions</th>
                     </tr>
                     {% for u in users %}
                     <tr>
@@ -79,23 +77,6 @@
                             </span>
                         </td>
                         <td style="font-family:monospace; color:var(--text-muted); letter-spacing: 1px;">{{ u.token }}</td>
-                        <td>{% if u.role == 'agent' %}{{ u.tickets_sold }}{% else %}-{% endif %}</td>
-                        <td>
-                            {% if u.role == 'agent' %}
-                                <span style="{% if u.amount_to_pay > 0 %}color: #dc2626; font-weight: bold;{% else %}color: #16a34a;{% endif %}">
-                                    {{ u.amount_to_pay }} MMK
-                                </span>
-                            {% else %}-{% endif %}
-                        </td>
-                        <td>
-                            {% if u.role == 'agent' %}
-                            <form action="{{ url_for('update_payment', username=u.username) }}" method="POST" style="display:inline-flex; gap: 8px; align-items:center;">
-                                <input type="number" name="paid_amount" placeholder="Paid Amount" value="{{ u.paid_amount }}" style="width: 100px; padding: 4px; font-size: 0.8rem;" required>
-                                <button type="submit" name="action" value="edit" class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;">Update Paid</button>
-                                <button type="submit" name="action" value="clear" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;" onclick="return confirm('Clear payment for {{ u.username }}?')">Clear</button>
-                            </form>
-                            {% endif %}
-                        </td>
                     </tr>
                     {% endfor %}
                 </table>

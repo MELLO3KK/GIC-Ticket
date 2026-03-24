@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Agents - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Admin</span></a>
+            <div class="nav-user">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
+                <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
+                <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none;">Check-out</a>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none;">Manage Users</a>
+                <a href="{{ url_for('manage_agents') }}" class="btn btn-outline" style="border:none; font-weight:bold;">Manage Agents</a>
+                <span>Welcome, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: flex; flex-direction: column; gap: 24px;">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+            {% for message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Agent List -->
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:1.25rem;">Agent Directory & Financials</h2>
+                <div style="display: flex; gap: 12px;">
+                    <form action="{{ url_for('toggle_all_agents', status='stop') }}" method="POST" style="margin:0;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Suspend ticketing for ALL agents?')">Stop All Selling</button>
+                    </form>
+                    <form action="{{ url_for('toggle_all_agents', status='allow') }}" method="POST" style="margin:0;">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Allow ticketing for ALL agents?')">Allow All Selling</button>
+                    </form>
+                </div>
+            </div>
+            <div class="table-container" style="border:none; border-radius:0;">
+                <table>
+                    <tr>
+                        <th>Agent Username</th>
+                        <th>Tickets Sold</th>
+                        <th>Amount to Pay</th>
+                        <th>Payments</th>
+                        <th>Selling Permission</th>
+                    </tr>
+                    {% for u in agents %}
+                    <tr>
+                        <td style="font-weight:600;">{{ u.username }}</td>
+                        <td>{{ u.tickets_sold }}</td>
+                        <td>
+                            <span style="{% if u.amount_to_pay > 0 %}color: #dc2626; font-weight: bold;{% else %}color: #16a34a;{% endif %}">
+                                {{ u.amount_to_pay }} MMK
+                            </span>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('update_payment', username=u.username) }}" method="POST" style="display:inline-flex; gap: 8px; align-items:center;">
+                                <input type="number" name="paid_amount" placeholder="Paid Amount" value="{{ u.paid_amount }}" style="width: 100px; padding: 4px; font-size: 0.8rem;" required>
+                                <button type="submit" name="action" value="edit" class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;">Update Paid</button>
+                                <button type="submit" name="action" value="clear" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;" onclick="return confirm('Clear payment for {{ u.username }}?')">Clear</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('toggle_agent', username=u.username) }}" method="POST" style="display:inline-flex; gap: 8px; align-items:center;">
+                                <span class="badge" style="{% if u.can_sell_tickets %}background:rgba(22, 163, 74, 0.2); border:1px solid rgba(22, 163, 74, 0.3); color:#16a34a;{% else %}background:rgba(220, 38, 38, 0.2); border:1px solid rgba(220, 38, 38, 0.3); color:#dc2626;{% endif %}">
+                                    {{ 'Active' if u.can_sell_tickets else 'Suspended' }}
+                                </span>
+                                <button type="submit" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">Toggle</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center; padding: 40px; color:var(--text-muted);">No agents found.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
