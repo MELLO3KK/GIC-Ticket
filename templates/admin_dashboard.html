@@ -55,7 +55,7 @@
                         <td>{{ ticket.agent_username }}</td>
                         <td><small style="color:var(--text-muted); font-family:monospace; letter-spacing:-0.5px;">{{ ticket.qr_token[:16] }}...</small></td>
                         <td style="text-align:right; gap:8px; display:flex; justify-content:flex-end;">
-                            <a href="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline">Download QR</a>
+                            <a href="{{ url_for('serve_qr', qr_token=ticket.qr_token) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline">Download QR</a>
                             <a href="{{ url_for('edit_ticket', ticket_id=ticket.id) }}" class="btn btn-outline">Edit</a>
                             <a href="{{ url_for('delete_ticket', ticket_id=ticket.id) }}" class="btn btn-danger" onclick="return confirm('Delete this ticket permanently?')">Delete</a>
                         </td>

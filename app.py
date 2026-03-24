@@ -2,7 +2,8 @@ import os
 import uuid
 import random
 import qrcode
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+import io
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import db
 
 app = Flask(__name__)
@@ -72,11 +73,6 @@ def agent_dashboard():
         ticket_id = str(uuid.uuid4())[:8]
         qr_token = str(uuid.uuid4())
         qr_filename = f"{ticket_id}.png"
-        qr_path = os.path.join(QR_DIR, qr_filename)
-
-        # Generate QR Code image
-        img = qrcode.make(qr_token)
-        img.save(qr_path)
 
         db.create_ticket({
             'id': ticket_id,
@@ -105,11 +101,6 @@ def delete_ticket(ticket_id):
         return redirect(url_for('login'))
 
     ticket = db.get_ticket_by_id(ticket_id)
-    if ticket:
-        qr_image = ticket['qr_image']
-        qr_path = os.path.join(QR_DIR, qr_image)
-        if os.path.exists(qr_path):
-            os.remove(qr_path)
 
     db.delete_ticket(ticket_id)
     flash(f'Ticket {ticket_id} deleted')
@@ -138,6 +129,18 @@ def edit_ticket(ticket_id):
         return redirect(url_for('admin_dashboard'))
 
     return render_template('edit_ticket.html', ticket=ticket)
+
+
+@app.route('/qr/<qr_token>')
+def serve_qr(qr_token):
+    if not qr_token:
+        return "Invalid QR token", 400
+        
+    img = qrcode.make(qr_token)
+    img_io = io.BytesIO()
+    img.save(img_io, 'PNG')
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/png')
 
 
 @app.route('/admin/users', methods=['GET', 'POST'])

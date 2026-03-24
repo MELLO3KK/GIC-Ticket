@@ -76,9 +76,7 @@
                         </td>
                         <td><span class="badge">{{ ticket.class_name }}</span></td>
                         <td>
-                            <img src="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" width="72" class="qr-code-img" alt="QR Code" title="Secure Token: {{ ticket.qr_token }}">
-                            <br>
-                            <a href="{{ url_for('static', filename='qrcodes/' + ticket.qr_image) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline" style="font-size: 0.7rem; padding: 4px 8px; margin-top: 4px; display: inline-block;">Download QR</a>
+                            <a href="{{ url_for('serve_qr', qr_token=ticket.qr_token) }}" download="Ticket_{{ ticket.id }}.png" class="btn btn-outline" style="font-size: 0.7rem; padding: 4px 8px; margin-top: 4px; display: inline-block;">Download QR</a>
                         </td>
                     </tr>
                     {% else %}
