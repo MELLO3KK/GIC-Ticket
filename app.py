@@ -383,6 +383,46 @@ def admin_check_out():
     return render_template('check_out.html')
 
 
+@app.route('/admin/attendance')
+def admin_attendance():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    logs = db.get_all_attendance()
+    return render_template('admin_attendance.html', logs=logs)
+
+
+@app.route('/admin/attendance/export_csv')
+def admin_export_attendance_csv():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    logs = db.get_all_attendance()
+    
+    def generate():
+        data = io.StringIO()
+        writer = csv.writer(data)
+        writer.writerow(('Ticket ID', 'Student Name', 'Event Type', 'Timestamp'))
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+
+        for log in logs:
+            writer.writerow((
+                log.get('ticket_id', ''),
+                log.get('student_name', ''),
+                log.get('event_type', ''),
+                log.get('timestamp', '')
+            ))
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+
+    response = Response(generate(), mimetype='text/csv')
+    response.headers.set("Content-Disposition", "attachment", filename="attendance_logs.csv")
+    return response
+
+
 if __name__ == '__main__':
     from waitress import serve
     print("Starting production server with Waitress on http://0.0.0.0:5000...")

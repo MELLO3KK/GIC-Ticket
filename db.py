@@ -113,7 +113,8 @@ def get_ticket_by_qr(qr_token: str):
 
 def log_attendance(ticket_id: str, student_name: str, event_type: str):
     """Log check-in or check-out event."""
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    tz = datetime.timezone(datetime.timedelta(hours=6, minutes=30))
+    timestamp = datetime.datetime.now(tz).isoformat()
     supabase.table("attendance_log").insert({
         "ticket_id": ticket_id,
         "student_name": student_name,
@@ -134,3 +135,15 @@ def get_last_attendance(ticket_id: str):
         .execute()
     )
     return res.data[0] if res.data else None
+
+
+def get_all_attendance():
+    """Return all attendance log entries, newest first."""
+    res = (
+        supabase.table("attendance_log")
+        .select("*")
+        .order("timestamp", desc=True)
+        .execute()
+    )
+    return res.data
+

@@ -9,7 +9,7 @@
 <body>
     <nav class="navbar">
         <div class="nav-content">
-            <a href="#" class="nav-brand">GIC Thingyan <span style="color:var(--text-muted);font-weight:400;font-size:1rem;">| Agent</span></a>
+            <a href="#" class="nav-brand">GIC Thingyan <span style="background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 8px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);">Agent</span></a>
             <div class="nav-user">
                 <span>Agent: <strong>{{ session['username'] }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
