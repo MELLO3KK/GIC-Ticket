@@ -16,11 +16,7 @@
             <div class="nav-user">
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
                     style="border:none; font-weight:bold;">Dashboard</a>
-                <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
-                <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none;">Check-out</a>
-                <a href="{{ url_for('admin_attendance') }}" class="btn btn-outline" style="border:none;">Attendance</a>
-                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none;">Manage Users</a>
-                <a href="{{ url_for('manage_agents') }}" class="btn btn-outline" style="border:none;">Manage Agents</a>
+                <a href="{{ url_for('admin_tools') }}" class="btn btn-outline" style="border:none;">Admin Tools</a>
                 <span>Welcome, <strong>{{ session['username'] }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
             </div>
@@ -71,7 +67,7 @@
                                 ticket.qr_token[:16] }}...</small></td>
                         <td style="text-align:right; gap:8px; display:flex; justify-content:flex-end;">
                             <a href="{{ url_for('serve_qr', qr_token=ticket.qr_token) }}"
-                                download="Ticket_{{ ticket.id }}.jpg" class="btn btn-outline">Download QR</a>
+                                download="{{ ticket.student_name.lower().replace(' ', '_') }}_{{ ticket.class_name.lower().replace(' ', '_') }}.jpg" class="btn btn-outline">Download QR</a>
                             <a href="{{ url_for('edit_ticket', ticket_id=ticket.id) }}" class="btn btn-outline">Edit</a>
                             <a href="{{ url_for('delete_ticket', ticket_id=ticket.id) }}" class="btn btn-danger"
                                 onclick="return confirm('Delete this ticket permanently?')">Delete</a>

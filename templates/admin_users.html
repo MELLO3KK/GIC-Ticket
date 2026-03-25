@@ -11,12 +11,9 @@
         <div class="nav-content">
             <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span style="background: rgba(14, 165, 233, 0.15); color: var(--primary-hover); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(14, 165, 233, 0.3); margin-left: 8px; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);">Admin</span></a>
             <div class="nav-user">
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="border:none;">Dashboard</a>
-                <a href="{{ url_for('admin_check_in') }}" class="btn btn-outline" style="border:none;">Check-in</a>
-                <a href="{{ url_for('admin_check_out') }}" class="btn btn-outline" style="border:none;">Check-out</a>
-                <a href="{{ url_for('admin_attendance') }}" class="btn btn-outline" style="border:none;">Attendance</a>
-                <a href="{{ url_for('manage_users') }}" class="btn btn-outline" style="border:none; font-weight:bold;">Manage Users</a>
-                <a href="{{ url_for('manage_agents') }}" class="btn btn-outline" style="border:none;">Manage Agents</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
+                    style="border:none; font-weight:bold;">Dashboard</a>
+                <a href="{{ url_for('admin_tools') }}" class="btn btn-outline" style="border:none;">Admin Tools</a>
                 <span>Welcome, <strong>{{ session['username'] }}</strong></span>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
             </div>

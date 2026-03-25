@@ -60,6 +60,13 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', tickets=tickets)
 
 
+@app.route('/admin/tools')
+def admin_tools():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    return render_template('admin_tools.html')
+
+
 @app.route('/agent', methods=['GET', 'POST'])
 def agent_dashboard():
     if session.get('role') != 'agent':
@@ -146,6 +153,15 @@ def serve_qr(qr_token):
     img = qrcode.make(qr_token)
     template_path = os.path.join(BASE_DIR, 'template.jpg')
     
+    # Get student name and class for filename
+    ticket = db.get_ticket_by_qr(qr_token)
+    if ticket:
+        name = ticket.get('student_name', 'unknown').lower().replace(' ', '_')
+        clazz = ticket.get('class_name', 'unknown').lower().replace(' ', '_')
+        base_filename = f"{name}_{clazz}"
+    else:
+        base_filename = f"ticket_{qr_token}"
+
     if os.path.exists(template_path):
         qr_img = img.convert("RGBA")
         design = Image.open(template_path).convert("RGBA")
@@ -160,12 +176,12 @@ def serve_qr(qr_token):
         img_io = io.BytesIO()
         design.save(img_io, 'JPEG')
         img_io.seek(0)
-        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f"ticket_{qr_token}.jpg")
+        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f"{base_filename}.jpg")
     else:
         img_io = io.BytesIO()
         img.save(img_io, 'PNG')
         img_io.seek(0)
-        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=f"qr_{qr_token}.png")
+        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=f"{base_filename}.png")
 
 
 @app.route('/admin/users', methods=['GET', 'POST'])
