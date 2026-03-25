@@ -34,4 +34,4 @@ Follow these steps to set up and run the application locally on your machine.
 ### Features
 * **Authentication**: Token/Session handling using Flask's secure session capabilities and hashed passwords (via `werkzeug.security`).
 * **Database**: Uses supabase.
-* **QR Codes**: Every generated ticket automatically produces a unique UUID secure token embedded into a QR code. The codes are stored inside `/static/qrcodes/`.
+* **QR Codes**: Every generated ticket automatically produces a unique UUID secure token embedded into a QR code. 
