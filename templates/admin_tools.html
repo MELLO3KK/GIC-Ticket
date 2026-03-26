@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Tools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+        .tool-card {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            backdrop-filter: blur(8px);
+        }
+        .tool-card:hover {
+            background: white;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary);
+        }
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+        .tool-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .tool-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">GIC Thingyan <span
+                    style="background: rgba(14, 165, 233, 0.15); color: var(--primary-hover); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(14, 165, 233, 0.3); margin-left: 8px; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.15);">Admin</span></a>
+            <div class="nav-user">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
+                    style="border:none; font-weight:bold;">Dashboard</a>
+                <span>Welcome, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border:none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div style="margin-bottom: 32px;">
+                <h2 class="card-header" style="margin-bottom: 8px;">Admin Tools</h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin: 0;">Select a tool to manage your event operations.</p>
+            </div>
+            
+            <div class="tool-grid">
+                <a href="{{ url_for('admin_check_in') }}" class="tool-card">
+                    <span class="tool-icon">🎟️</span>
+                    <span class="tool-title">Check-in</span>
+                    <span class="tool-desc">Process student entry with QR verification.</span>
+                </a>
+                
+                <a href="{{ url_for('admin_check_out') }}" class="tool-card">
+                    <span class="tool-icon">🚪</span>
+                    <span class="tool-title">Check-out</span>
+                    <span class="tool-desc">Record student exit from the event.</span>
+                </a>
+                
+                <a href="{{ url_for('admin_attendance') }}" class="tool-card">
+                    <span class="tool-icon">📋</span>
+                    <span class="tool-title">Attendance</span>
+                    <span class="tool-desc">View and export detailed attendance logs.</span>
+                </a>
+                
+                <a href="{{ url_for('manage_users') }}" class="tool-card">
+                    <span class="tool-icon">👤</span>
+                    <span class="tool-title">Manage Users</span>
+                    <span class="tool-desc">Create and edit administrative accounts.</span>
+                </a>
+                
+                <a href="{{ url_for('manage_agents') }}" class="tool-card">
+                    <span class="tool-icon">🤝</span>
+                    <span class="tool-title">Manage Agents</span>
+                    <span class="tool-desc">Monitor ticket sellers and payment status.</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

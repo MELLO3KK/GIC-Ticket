@@ -60,6 +60,13 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', tickets=tickets)
 
 
+@app.route('/admin/tools')
+def admin_tools():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    return render_template('admin_tools.html')
+
+
 @app.route('/agent', methods=['GET', 'POST'])
 def agent_dashboard():
     if session.get('role') != 'agent':
@@ -146,6 +153,15 @@ def serve_qr(qr_token):
     img = qrcode.make(qr_token)
     template_path = os.path.join(BASE_DIR, 'template.jpg')
     
+    # Get student name and class for filename
+    ticket = db.get_ticket_by_qr(qr_token)
+    if ticket:
+        name = ticket.get('student_name', 'unknown').lower().replace(' ', '_')
+        clazz = ticket.get('class_name', 'unknown').lower().replace(' ', '_')
+        base_filename = f"{name}_{clazz}"
+    else:
+        base_filename = f"ticket_{qr_token}"
+
     if os.path.exists(template_path):
         qr_img = img.convert("RGBA")
         design = Image.open(template_path).convert("RGBA")
@@ -160,12 +176,12 @@ def serve_qr(qr_token):
         img_io = io.BytesIO()
         design.save(img_io, 'JPEG')
         img_io.seek(0)
-        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f"ticket_{qr_token}.jpg")
+        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f"{base_filename}.jpg")
     else:
         img_io = io.BytesIO()
         img.save(img_io, 'PNG')
         img_io.seek(0)
-        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=f"qr_{qr_token}.png")
+        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=f"{base_filename}.png")
 
 
 @app.route('/admin/users', methods=['GET', 'POST'])
@@ -387,6 +403,15 @@ def admin_check_out():
         if not ticket:
             return {"success": False, "message": "Invalid QR token"}, 404
             
+        last = db.get_last_attendance(ticket['id'])
+        if not last or last['event_type'] != 'Check-in':
+            return {
+                "success": False,
+                "message": f"{ticket['student_name']} has not checked in. Cannot check out.",
+                "student_name": ticket['student_name'],
+                "class_name": ticket.get('class_name', ''),
+            }, 409
+
         try:
             ts = db.log_attendance(ticket['id'], ticket['student_name'], "Check-out")
             return {
@@ -439,6 +464,74 @@ def admin_export_attendance_csv():
 
     response = Response(generate(), mimetype='text/csv')
     response.headers.set("Content-Disposition", "attachment", filename="attendance_logs.csv")
+    return response
+
+
+@app.route('/admin/not-checked-in')
+def admin_not_checked_in():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    all_tickets = db.get_all_tickets()
+    all_attendance = db.get_all_attendance()
+    
+    last_attendance_by_ticket = {}
+    for log in all_attendance:
+        tid = log['ticket_id']
+        if tid not in last_attendance_by_ticket:
+            last_attendance_by_ticket[tid] = log
+            
+    not_checked_in_tickets = []
+    for ticket in all_tickets:
+        last_log = last_attendance_by_ticket.get(ticket['id'])
+        if not last_log or last_log['event_type'] != 'Check-in':
+            not_checked_in_tickets.append(ticket)
+            
+    return render_template('admin_not_checked_in.html', tickets=not_checked_in_tickets)
+
+
+@app.route('/admin/not-checked-in/export_csv')
+def admin_export_not_checked_in_csv():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    all_tickets = db.get_all_tickets()
+    all_attendance = db.get_all_attendance()
+    
+    last_attendance_by_ticket = {}
+    for log in all_attendance:
+        tid = log['ticket_id']
+        if tid not in last_attendance_by_ticket:
+            last_attendance_by_ticket[tid] = log
+            
+    tickets_list = []
+    for ticket in all_tickets:
+        last_log = last_attendance_by_ticket.get(ticket['id'])
+        if not last_log or last_log['event_type'] != 'Check-in':
+            tickets_list.append(ticket)
+            
+    def generate():
+        data = io.StringIO()
+        writer = csv.writer(data)
+        writer.writerow(('Ticket ID', 'Student Name', 'Class / Grade', 'Sold By', 'QR Token'))
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+
+        for t in tickets_list:
+            writer.writerow((
+                t.get('id', ''),
+                t.get('student_name', ''),
+                t.get('class_name', ''),
+                t.get('agent_username', ''),
+                t.get('qr_token', '')
+            ))
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+
+    response = Response(generate(), mimetype='text/csv')
+    response.headers.set("Content-Disposition", "attachment", filename="not_checked_in_students.csv")
     return response
 
 
