@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --primary: #0ea5e9;      /* Vibrant Sky Blue */
-    --primary-hover: #0284c7;
-    --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
-    --bg-gradient: linear-gradient(135deg, #cffafe 0%, #e0f2fe 50%, #bae6fd 100%);
-    --surface: rgba(255, 255, 255, 0.75);
-    --surface-hover: rgba(255, 255, 255, 0.9);
-    --text-main: #0f172a;
-    --text-muted: #475569;
+    --primary: #d4af37;      /* School Gold */
+    --primary-hover: #b8860b;
+    --primary-gradient: linear-gradient(135deg, #f1d592 0%, #d4af37 100%);
+    --bg-gradient: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%);
+    --surface: rgba(255, 255, 255, 0.8);
+    --surface-hover: rgba(255, 255, 255, 0.95);
+    --text-main: #1a1a1a;
+    --text-muted: #4b5563;
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --success: #10b981;
-    --border: rgba(255, 255, 255, 0.6);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --border: rgba(212, 175, 55, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(184, 134, 11, 0.07);
 }
 
 @keyframes gradientBG {
@@ -50,12 +50,12 @@ body::before, body::after {
     animation: floatShape 20s infinite alternate;
 }
 body::before {
-    background: rgba(56, 189, 248, 0.4);
+    background: rgba(212, 175, 55, 0.25);
     top: -200px;
     left: -200px;
 }
 body::after {
-    background: rgba(167, 139, 250, 0.3); /* Soft purple tint */
+    background: rgba(251, 191, 36, 0.15); /* Soft amber tint */
     bottom: -200px;
     right: -200px;
     animation-delay: -10s;
@@ -97,6 +97,7 @@ body::after {
     font-weight: 700;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
     display: flex;
@@ -142,12 +143,12 @@ body::after {
 }
 
 .btn-nav:hover {
-    background: rgba(14, 165, 233, 0.08);
+    background: rgba(212, 175, 55, 0.08);
     color: var(--primary-hover);
 }
 
 .btn-nav.active {
-    background: rgba(14, 165, 233, 0.15);
+    background: rgba(212, 175, 55, 0.15);
     color: var(--primary-hover);
     font-weight: 600;
 }
@@ -172,11 +173,11 @@ body::after {
     background: var(--primary-gradient);
     color: white;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.5);
 }
 
 .btn-danger {
@@ -276,7 +277,7 @@ body::after {
     outline: none;
     background: white;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
 }
 
 /* Flash Messages */
@@ -290,8 +291,8 @@ body::after {
 }
 .flash-message {
     padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.8);
-    color: #0369a1;
+    background: rgba(255, 255, 255, 0.9);
+    color: #856404;
     border-left: 4px solid var(--primary);
     border-radius: 8px;
     font-size: 0.95rem;
@@ -368,9 +369,9 @@ tr:hover td {
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 600;
-    background: rgba(224, 242, 254, 0.8);
-    color: var(--primary-hover);
-    border: 1px solid rgba(186, 230, 253, 0.5);
+    background: rgba(254, 243, 199, 0.8);
+    color: #92400e;
+    border: 1px solid rgba(212, 175, 55, 0.3);
     backdrop-filter: blur(4px);
 }
 
@@ -386,6 +387,7 @@ tr:hover td {
     font-weight: 800;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
     letter-spacing: -1px;

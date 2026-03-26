@@ -9,7 +9,10 @@
 <body>
     <nav class="navbar">
         <div class="nav-content">
-            <a href="#" class="nav-brand">GIC Thingyan <span style="background: rgba(14, 165, 233, 0.15); color: var(--primary-hover); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(14, 165, 233, 0.3); margin-left: 8px; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);">Admin</span></a>
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="GIC Logo" style="height: 38px;">
+                GIC <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-hover); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(212, 175, 55, 0.3); margin-left: 4px; box-shadow: 0 2px 4px rgba(212, 175, 55, 0.1);">Admin</span>
+            </a>
             <div class="nav-user">
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
                     style="border:none; font-weight:bold;">Dashboard</a>
