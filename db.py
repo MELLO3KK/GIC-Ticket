@@ -67,15 +67,15 @@ def get_all_tokens():
 # ─── Tickets ──────────────────────────────────────────────────────────────────
 
 def get_all_tickets():
-    """Return list of ticket dicts."""
+    """Return list of ticket dicts, newest first (heuristic)."""
     res = supabase.table("tickets").select("*").execute()
-    return res.data
+    return res.data[::-1]
 
 
 def get_tickets_by_agent(username: str):
-    """Return tickets created by a specific agent."""
+    """Return tickets created by a specific agent, newest first (heuristic)."""
     res = supabase.table("tickets").select("*").eq("agent_username", username).execute()
-    return res.data
+    return res.data[::-1]
 
 
 def get_ticket_by_id(ticket_id: str):
