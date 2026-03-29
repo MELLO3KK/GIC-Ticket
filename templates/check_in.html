@@ -194,7 +194,16 @@
             display: none;
         }
         .scanning-state.active { display: block; }
-        .scanning-label { font-size: 0.85rem; color: #059669; font-weight: 600; margin-top: 6px; }
+        .scanning-label { 
+            font-size: 0.85rem; 
+            color: #065f46; 
+            font-weight: 600; 
+            margin-top: 10px;
+            background: rgba(52, 211, 153, 0.15);
+            padding: 6px 16px;
+            border-radius: 999px;
+            display: inline-block;
+        }
         
         /* Compact container for scanner */
         .container { padding: 15px 20px; gap: 16px; }
@@ -218,6 +227,16 @@
     </nav>
 
     <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages" id="flash-container">
+            {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         <div class="scanner-layout">
 
             <!-- ── Left: Scanner ── -->
@@ -240,37 +259,46 @@
                 </div>
 
                 <!-- Scanning indicator (shown while camera is active) -->
-                <div id="scanning-state" class="scanning-state">
-                    <div class="scan-ring"></div>
-                    <div class="scanning-label">Scanning…</div>
-                </div>
-
-                <!-- Status pill -->
-                <div id="status-pill" class="status-pill">
-                    <div class="status-dot"></div>
-                    <span id="status-text"></span>
-                </div>
-
-                <!-- Rich result card -->
-                <div id="result-card" class="result-card">
-                    <div id="result-name" class="result-name"></div>
-                    <div id="result-meta" class="result-meta"></div>
-                </div>
+                <!-- Moved to history column -->
             </div>
 
-            <!-- ── Right: Scan History ── -->
-            <div class="history-card">
-                <div class="history-header">
-                    <div class="history-label">
-                        📋 Scan History
+            <!-- ── Right: Column ── -->
+            <div class="history-column" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Scan History -->
+                <div class="history-card">
+                    <div class="history-header">
+                        <div class="history-label">
+                            📋 Scan History
+                        </div>
+                        <span id="history-count-badge" class="history-count">0</span>
                     </div>
-                    <span id="history-count-badge" class="history-count">0</span>
+                    <div id="history-empty" class="history-empty">
+                        <div class="empty-icon">📷</div>
+                        Scans will appear here as you check people in.
+                    </div>
+                    <ul id="history-list" class="history-list"></ul>
                 </div>
-                <div id="history-empty" class="history-empty">
-                    <div class="empty-icon">📷</div>
-                    Scans will appear here as you check people in.
+
+                <!-- Status area (Moved from left) -->
+                <div class="status-container">
+                    <!-- Scanning indicator -->
+                    <div id="scanning-state" class="scanning-state" style="padding: 10px;">
+                        <div class="scan-ring"></div>
+                        <div class="scanning-label">Scanning…</div>
+                    </div>
+
+                    <!-- Status pill -->
+                    <div id="status-pill" class="status-pill" style="margin: 0 0 16px 0;">
+                        <div class="status-dot"></div>
+                        <span id="status-text"></span>
+                    </div>
+
+                    <!-- Rich result card -->
+                    <div id="result-card" class="result-card" style="margin: 0; position: relative; z-index: 10;">
+                        <div id="result-name" class="result-name"></div>
+                        <div id="result-meta" class="result-meta"></div>
+                    </div>
                 </div>
-                <ul id="history-list" class="history-list"></ul>
             </div>
 
         </div>
@@ -290,7 +318,11 @@
             txt.textContent = msg;
             clearTimeout(pill._timer);
             pill._timer = setTimeout(() => {
-                pill.classList.remove("visible");
+                pill.classList.add("fade-out");
+                setTimeout(() => {
+                    pill.classList.remove("visible");
+                    pill.classList.remove("fade-out");
+                }, 500);
             }, 4000);
         }
 
@@ -303,7 +335,13 @@
             nEl.textContent = name;
             mEl.innerHTML = metaItems.map(m => `<span>${m}</span>`).join("");
             clearTimeout(card._timer);
-            card._timer = setTimeout(() => { card.style.display = "none"; }, 5000);
+            card._timer = setTimeout(() => { 
+                card.classList.add("fade-out");
+                setTimeout(() => {
+                    card.style.display = "none";
+                    card.classList.remove("fade-out");
+                }, 500);
+            }, 5000);
         }
 
         function addHistory(name, sub, type) {
@@ -413,6 +451,15 @@
                 document.getElementById("reader").style.display = "none";
                 document.getElementById("camera-error").style.display = "block";
             });
+
+        // ── Auto-hide flash messages ──────────────────────────────────────────
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(msg => {
+            setTimeout(() => {
+                msg.classList.add('fade-out');
+                setTimeout(() => msg.remove(), 500);
+            }, 5000);
+        });
     });
     </script>
 </body>
