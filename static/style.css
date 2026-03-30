@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 html {
-    font-size: 112.5%; /* Base font size boost from 18px to 16px-equivalent is 100%, 112.5% is 18px */
+    font-size: 100%; /* Standard 16px base font size */
 }
 
 :root {
@@ -88,7 +88,7 @@ body::after {
 
 .nav-content {
     width: 100%;
-    max-width: 1150px;
+    max-width: 1100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -215,7 +215,7 @@ body::after {
 
 .container {
     width: 100%;
-    max-width: 1300px;
+    max-width: 1200px;
     padding: 60px 40px;
     display: flex;
     flex-direction: column;
