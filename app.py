@@ -234,6 +234,40 @@ def update_payment(username):
 
     return redirect(url_for('manage_agents'))
 
+@app.route('/admin/payment/update_ajax', methods=['POST'])
+def update_payment_ajax():
+    if session.get('role') != 'admin':
+        return {"success": False, "message": "Unauthorized"}, 403
+
+    data = request.get_json() or {}
+    username = data.get('username')
+    amount_given = data.get('amount_given', 0)
+
+    try:
+        amount_given = int(amount_given)
+    except ValueError:
+        return {"success": False, "message": "Invalid amount"}, 400
+
+    user = db.get_user_by_username(username)
+    if not user:
+        return {"success": False, "message": "User not found"}, 404
+
+    new_paid = db.increment_user_paid_amount(username, amount_given)
+    
+    # Calculate updated financials
+    all_tickets = db.get_all_tickets()
+    t_sold = len([t for t in all_tickets if t['agent_username'] == username])
+    total_value = t_sold * 25000
+    amount_to_pay = total_value - new_paid
+
+    return {
+        "success": True,
+        "new_paid": new_paid,
+        "amount_to_pay": amount_to_pay,
+        "total_value": total_value,
+        "tickets_sold": t_sold
+    }
+
 @app.route('/admin/agents', methods=['GET'])
 def manage_agents():
     if session.get('role') != 'admin':
