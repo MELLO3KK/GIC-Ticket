@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+bin/
+lib/
+share/
+include/
+
+# Environment Variables
+.env
+
+# Flask & Python specific
+instance/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Project specific
+static/qrcodes/*.png
+static/qrcodes/*.jpg
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database (optional if using SQLite)
+*.db
+*.sqlite3
