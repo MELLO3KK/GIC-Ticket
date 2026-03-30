@@ -44,6 +44,16 @@ def update_user_paid_amount(username: str, amount: int):
     }).eq("username", username).execute()
 
 
+def increment_user_paid_amount(username: str, amount: int):
+    """Add amount to the current paid_amount for a user."""
+    user = get_user_by_username(username)
+    if user:
+        new_paid = user.get('paid_amount', 0) + amount
+        update_user_paid_amount(username, new_paid)
+        return new_paid
+    return None
+
+
 def update_user_can_sell(username: str, can_sell: bool):
     """Set can_sell_tickets for a user."""
     supabase.table("users").update({

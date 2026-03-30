@@ -52,25 +52,34 @@
                     <tr>
                         <th>Agent Username</th>
                         <th>Tickets Sold</th>
-                        <th>Amount to Pay</th>
-                        <th>Payments</th>
+                        <th>Total Value</th>
+                        <th>Paid Amount</th>
+                        <th>Remaining</th>
+                        <th>Add Payment</th>
                         <th>Selling Permission</th>
                     </tr>
                     {% for u in agents %}
-                    <tr>
+                    <tr id="row-{{ u.username }}">
                         <td style="font-weight:600;">{{ u.username }}</td>
-                        <td>{{ u.tickets_sold }}</td>
+                        <td class="tickets-sold">{{ u.tickets_sold }}</td>
+                        <td class="total-value">{{ u.total_value }} MMK</td>
+                        <td class="paid-amount">{{ u.paid_amount }} MMK</td>
                         <td>
-                            <span style="{% if u.amount_to_pay > 0 %}color: #dc2626; font-weight: bold;{% else %}color: #16a34a;{% endif %}">
+                            <span class="amount-to-pay" style="{% if u.amount_to_pay > 0 %}color: #dc2626; font-weight: bold;{% else %}color: #16a34a;{% endif %}">
                                 {{ u.amount_to_pay }} MMK
                             </span>
                         </td>
                         <td>
-                            <form action="{{ url_for('update_payment', username=u.username) }}" method="POST" style="display:inline-flex; gap: 8px; align-items:center;">
-                                <input type="number" name="paid_amount" placeholder="Paid Amount" value="{{ u.paid_amount }}" style="width: 100px; padding: 4px; font-size: 0.8rem;" required>
-                                <button type="submit" name="action" value="edit" class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;">Update Paid</button>
-                                <button type="submit" name="action" value="clear" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;" onclick="return confirm('Clear payment for {{ u.username }}?')">Clear</button>
-                            </form>
+                            <div style="display:inline-flex; gap: 12px; align-items:center;">
+                                <div class="payment-input-group">
+                                    <input type="number" class="payment-input" data-username="{{ u.username }}" placeholder="Amount" step="1000">
+                                    <button type="button" class="btn btn-primary btn-add-payment" onclick="submitPayment('{{ u.username }}')">Add</button>
+                                </div>
+                                
+                                <form action="{{ url_for('update_payment', username=u.username) }}" method="POST" style="display:inline-flex; margin:0;">
+                                    <button type="submit" name="action" value="clear" class="btn btn-outline" style="padding: 8px 12px; font-size: 0.85rem;" onclick="return confirm('Clear payment for {{ u.username }}?')">Clear</button>
+                                </form>
+                            </div>
                         </td>
                         <td>
                             <form action="{{ url_for('toggle_agent', username=u.username) }}" method="POST" style="display:inline-flex; gap: 8px; align-items:center;">
@@ -82,11 +91,68 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="5" style="text-align: center; padding: 40px; color:var(--text-muted);">No agents found.</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 40px; color:var(--text-muted);">No agents found.</td></tr>
                     {% endfor %}
                 </table>
             </div>
         </div>
     </div>
+    <script>
+    async function submitPayment(username) {
+        const row = document.getElementById(`row-${username}`);
+        const input = row.querySelector('.payment-input');
+        const amount = input.value;
+
+        if (!amount || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ url_for('update_payment_ajax') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: username,
+                    amount_given: amount
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update UI
+                row.querySelector('.paid-amount').textContent = `${result.new_paid} MMK`;
+                const remainingSpan = row.querySelector('.amount-to-pay');
+                remainingSpan.textContent = `${result.amount_to_pay} MMK`;
+                
+                // Update style based on remaining amount
+                if (result.amount_to_pay <= 0) {
+                    remainingSpan.style.color = "#16a34a";
+                    remainingSpan.style.fontWeight = "normal";
+                } else {
+                    remainingSpan.style.color = "#dc2626";
+                    remainingSpan.style.fontWeight = "bold";
+                }
+
+                // Clear input
+                input.value = "";
+                
+                // Visual feedback
+                row.classList.add('row-success');
+                setTimeout(() => {
+                    row.classList.remove('row-success');
+                }, 1500);
+            } else {
+                alert("Error: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error updating payment:", error);
+            alert("Failed to update payment. Please try again.");
+        }
+    }
+    </script>
 </body>
 </html>
