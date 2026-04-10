@@ -49,6 +49,11 @@
         #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; min-height: 180px; }
         #reader video { border-radius: 12px; }
 
+        /* Mirror support */
+        #reader.mirrored video, #reader.mirrored canvas {
+            transform: scaleX(-1) !important;
+        }
+
         /* Camera error */
         .camera-error {
             padding: 40px 20px;
@@ -241,12 +246,17 @@
 
             <!-- ── Left: Scanner ── -->
             <div class="scanner-card">
-                <div class="scanner-header">
-                    <div class="scanner-icon">✓</div>
-                    <div>
-                        <p class="scanner-title">Check-in Scanner</p>
-                        <p class="scanner-subtitle">Point camera at student's QR code</p>
+                <div class="scanner-header" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="scanner-icon">✓</div>
+                        <div>
+                            <p class="scanner-title">Check-in Scanner</p>
+                            <p class="scanner-subtitle">Point camera at student's QR code</p>
+                        </div>
                     </div>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight: 600;">
+                        <input type="checkbox" id="mirrorToggle" style="width: 16px; height: 16px; cursor: pointer;"> Mirror
+                    </label>
                 </div>
 
                 <div id="reader-container">
@@ -309,6 +319,83 @@
         const html5QrCode = new Html5Qrcode("reader");
         let isProcessing = false;
         let scanCount = 0;
+
+        // ── Mirror feature ──────────────────────────────────────────────────────
+        const mirrorToggle = document.getElementById("mirrorToggle");
+        const readerEl = document.getElementById("reader");
+        
+        if (localStorage.getItem("mirrorWebcam") === "true") {
+            mirrorToggle.checked = true;
+            readerEl.classList.add("mirrored");
+        }
+        
+        mirrorToggle.addEventListener("change", function() {
+            if (this.checked) {
+                readerEl.classList.add("mirrored");
+                localStorage.setItem("mirrorWebcam", "true");
+            } else {
+                readerEl.classList.remove("mirrored");
+                localStorage.setItem("mirrorWebcam", "false");
+            }
+        });
+
+        // ── Audio helpers ───────────────────────────────────────────────────────
+        let audioCtx;
+        function playSound(type) {
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'warn') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch (err) {
+                console.log("Audio playback failed", err);
+            }
+        }
+
+        document.body.addEventListener('click', () => {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
 
         // ── UI helpers ──────────────────────────────────────────────────────────
         function showPill(msg, type) {
@@ -399,17 +486,20 @@
                     if (ts) meta.push("⏰ " + ts);
                     meta.push("✅ Checked In");
 
+                    playSound('success');
                     showPill("✓ " + data.student_name + " checked in", "success");
                     showResultCard(data.student_name, meta, "success");
                     addHistory(data.student_name, data.class_name || "Check-in", "success");
 
                 } else if (data.message && data.message.includes("already checked in")) {
+                    playSound('warn');
                     showPill("⚠ " + data.message, "warn");
                     showResultCard(data.student_name || "Already Checked In",
                         ["⚠ Already checked in", data.class_name || ""].filter(Boolean), "warn");
                     addHistory(data.student_name || "Unknown", "Already checked in", "warn");
 
                 } else {
+                    playSound('error');
                     showPill("✗ " + (data.message || "Scan failed"), "error");
                     showResultCard("Scan Failed", [data.message || "Unknown error"], "error");
                     addHistory("Invalid QR", data.message || "Not found", "error");
@@ -422,6 +512,7 @@
                 }, 2500);
             })
             .catch(() => {
+                playSound('error');
                 showPill("✗ Network error. Check connection.", "error");
                 addHistory("Network Error", "Could not reach server", "error");
                 isProcessing = false;
